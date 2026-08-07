@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EgoLens - Tableau de Bord Interactif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Notification / Boîte de message personnalisée -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] transition-transform duration-300 bg-slate-800 border border-slate-700 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
+        <i id="toast-icon" class="fa-solid fa-circle-info text-indigo-400"></i>
+        <span id="toast-message" class="text-sm font-medium">Notification EgoLens</span>
+    </div>
+
+    <!-- En-tête -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600/20 border border-indigo-500/30 p-2.5 rounded-xl text-indigo-400">
+                <i class="fa-solid fa-eye text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white">EgoLens <span class="text-xs uppercase px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30 ml-2">Pro</span></h1>
+                <p class="text-xs text-slate-400">Système d'analyse visuelle et cognitive</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button onclick="showToast('Synchronisation des flux EgoLens en cours...')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center space-x-2">
+                <i class="fa-solid fa-rotate"></i>
+                <span class="hidden sm:inline">Rafraîchir</span>
+            </button>
+            <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-500/30">
+                EL
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu Principal -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Colonne Gauche & Milieu : Analyse et Vision en direct -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Vision / Caméra simulée -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden group">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <h2 class="font-semibold text-sm text-slate-200">Flux Optique EgoLens</h2>
+                    </div>
+                    <div class="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
+                        Mode : <span class="text-indigo-400 font-medium">Analyse Cognitive</span>
+                    </div>
+                </div>
+
+                <!-- Simulation de la vue de la lentille -->
+                <div class="relative w-full h-64 md:h-80 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+                    <div class="absolute inset-0 opacity-40 bg-[radial-gradient(#4f46e5_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                    
+                    <!-- Éléments de réalité augmentée simulés -->
+                    <div class="absolute top-4 left-4 border border-indigo-500/50 bg-indigo-950/40 backdrop-blur-sm p-2 rounded-lg text-xs text-indigo-300 flex items-center space-x-2">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <span>Cible détectée: Focalisation active</span>
+                    </div>
+
+                    <div class="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-300">
+                        FPS: <span class="text-emerald-400 font-bold">60.0</span> | Latence: <span class="text-emerald-400 font-bold">12ms</span>
+                    </div>
+
+                    <!-- Illustration centrale -->
+                    <div class="text-center z-10 p-6">
+                        <div class="w-20 h-20 mx-auto mb-3 bg-indigo-600/10 border border-indigo-500/30 rounded-full flex items-center justify-center text-indigo-400 text-2xl shadow-inner">
+                            <i class="fa-solid fa-microchip"></i>
+                        </div>
+                        <p class="text-sm font-medium text-slate-300">Aucun signal vidéo brut externe requis</p>
+                        <p class="text-xs text-slate-500 mt-1">Le moteur EgoLens traite vos métriques en temps réel.</p>
+                    </div>
+                </div>
+
+                <!-- Contrôles de la lentille -->
+                <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button onclick="showToast('Filtre de clarté activé')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs py-2.5 px-3 rounded-xl transition font-medium flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+                        <span>Clarté+</span>
+                    </button>
+                    <button onclick="showToast('Isolation du sujet activée')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs py-2.5 px-3 rounded-xl transition font-medium flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-user-shield text-indigo-400"></i>
+                        <span>Isolation</span>
+                    </button>
+                    <button onclick="showToast('Mode nuit activé')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs py-2.5 px-3 rounded-xl transition font-medium flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-moon text-indigo-400"></i>
+                        <span>Vision Nuit</span>
+                    </button>
+                    <button onclick="showToast('Enregistrement du flux démarré')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2.5 px-3 rounded-xl transition font-medium flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20">
+                        <p class="inline"><i class="fa-solid fa-circle text-[8px] mr-1 text-red-400"></i> Enregistrer</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Graphique d'analyse des performances -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <h3 class="font-semibold text-sm text-slate-200 mb-4">Statistiques d'attention et de focalisation</h3>
+                <div class="h-64 w-full">
+                    <canvas id="attentionChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Colonne Droite : Panneau de Contrôle & Journal -->
+        <div class="space-y-6">
+            
+            <!-- Statut système -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <h3 class="font-semibold text-sm text-slate-200 mb-4 flex items-center justify-between">
+                    <span>État des Modules</span>
+                    <i class="fa-solid fa-server text-indigo-400"></i>
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-slate-300">Noyau Neural</h4>
+                                <p class="text-[10px] text-slate-500">Opérationnel</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-400">99.8%</span>
+                    </div>
+
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
+                                <i class="fa-solid fa-memory"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-slate-300">Mémoire Tampon</h4>
+                                <p class="text-[10px] text-slate-500">4.2 Go / 16 Go</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-indigo-400">26%</span>
+                    </div>
+
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
+                                <i class="fa-solid fa-temperature-half"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-slate-300">Température Capteur</h4>
+                                <p class="text-[10px] text-slate-500">Optimale</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-amber-400">38°C</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Journal d'événements EgoLens -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col h-80">
+                <h3 class="font-semibold text-sm text-slate-200 mb-3 flex items-center justify-between">
+                    <span>Journal d'Activité</span>
+                    <button onclick="clearLogs()" class="text-xs text-slate-500 hover:text-slate-300">Effacer</button>
+                </h3>
+                
+                <div id="log-container" class="flex-1 overflow-y-auto space-y-2 pr-2 text-xs font-mono">
+                    <div class="p-2 rounded bg-slate-950/60 border border-slate-800/80 text-slate-400 flex items-start space-x-2">
+                        <span class="text-indigo-400 font-bold">[12:00]</span>
+                        <span>Système EgoLens initialisé avec succès.</span>
+                    </div>
+                    <div class="p-2 rounded bg-slate-950/60 border border-slate-800/80 text-slate-400 flex items-start space-x-2">
+                        <span class="text-indigo-400 font-bold">[12:01]</span>
+                        <span>Calibration des lentilles terminée.</span>
+                    </div>
+                    <div class="p-2 rounded bg-slate-950/60 border border-slate-800/80 text-slate-400 flex items-start space-x-2">
+                        <span class="text-indigo-400 font-bold">[12:02]</span>
+                        <span>Prêt pour l'analyse des flux visuels.</span>
+                    </div>
+                </div>
+
+                <div class="mt-3 pt-3 border-t border-slate-800">
+                    <button onclick="addLogEntry()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-xl text-xs font-medium border border-slate-700 transition">
+                        Ajouter un point de repère
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Script JavaScript pour l'interactivité -->
+    <script>
+        // Fonction de notification type Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toast-message');
+            messageEl.textContent = message;
+            
+            toast.classList.remove('translate-y-[-150%]');
+            toast.classList.add('translate-y-0');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0');
+                toast.classList.add('translate-y-[-150%]');
+            }, 3000);
+        }
+
+        // Gestion du Journal
+        function clearLogs() {
+            const container = document.getElementById('log-container');
+            container.innerHTML = '<div class="text-slate-500 text-center py-4">Journal vidé.</div>';
+            showToast('Journal effacé');
+        }
+
+        function addLogEntry() {
+            const container = document.getElementById('log-container');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            const newLog = document.createElement('div');
+            newLog.className = 'p-2 rounded bg-slate-950/60 border border-slate-800/80 text-slate-400 flex items-start space-x-2 animate-fadeIn';
+            newLog.innerHTML = `<span class="text-indigo-400 font-bold">[${timeString}]</span> <span>Marqueur manuel enregistré par l'opérateur.</span>`;
+            
+            container.prepend(newLog);
+            showToast('Nouveau repère ajouté au journal');
+        }
+
+        // Initialisation du Graphique Chart.js
+        window.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('attentionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['10s', '20s', '30s', '40s', '50s', '60s'],
+                    datasets: [{
+                        label: 'Niveau d\'attention (%)',
+                        data: [65, 78, 85, 70, 92, 88],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(51, 65, 85, 0.2)'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 10 }
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(51, 65, 85, 0.2)'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
