@@ -41,7 +41,7 @@
     <!-- Contenu Principal -->
     <main class="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Colonne Gauche & Milieu -->
+        <!-- Colonne Gauche & Milieu : Analyse et Vision en direct -->
         <div class="lg:col-span-2 space-y-6">
             
             <!-- Vision / Caméra -->
@@ -98,6 +98,63 @@
                         <i class="fa-solid fa-circle text-[8px] mr-1 text-red-400"></i>
                         <span>Enregistrer</span>
                     </button>
+                </div>
+            </div>
+
+            <!-- NOUVEAU : Module d'analyse des micro-expressions en direct -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-sm text-slate-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-face-grin-beam text-indigo-400"></i>
+                        <span>Analyse des Micro-Expressions (FACS)</span>
+                    </h3>
+                    <span id="emotion-dominant" class="text-xs px-2.5 py-1 bg-slate-800 text-slate-400 rounded-lg border border-slate-700">En attente du flux</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Concentration / Focalisation -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-slate-400">Concentration</span>
+                            <span id="val-concentration" class="text-indigo-400 font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="bar-concentration" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tension / Stress -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-slate-400">Tension / Vigilance</span>
+                            <span id="val-tension" class="text-amber-400 font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="bar-tension" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Joie / Positivité -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-slate-400">Engagement / Joie</span>
+                            <span id="val-joy" class="text-emerald-400 font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="bar-joy" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Surprise / Réactivité -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-slate-400">Réactivité / Surprise</span>
+                            <span id="val-surprise" class="text-cyan-400 font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="bar-surprise" class="bg-cyan-500 h-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -159,6 +216,7 @@
     <script>
         let streamActive = false;
         let mediaStream = null;
+        let emotionInterval = null;
 
         function showToast(message) {
             const toast = document.getElementById('toast');
@@ -182,8 +240,7 @@
             if (!streamActive) {
                 try {
                     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        throw500 = new Error("API MediaDevices non supportée (ouvrez la page via localhost / HTTPs).");
-                        throw throw500;
+                        throw new Error("API MediaDevices non supportée.");
                     }
 
                     mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
@@ -201,6 +258,7 @@
 
                     streamActive = true;
                     showToast('Flux webcam activé avec succès');
+                    startEmotionAnalysis();
                 } catch (err) {
                     console.error("Erreur caméra:", err);
                     showToast('Erreur : Accès caméra refusé ou non sécurisé');
@@ -212,7 +270,7 @@
                 }
                 videoElement.srcObject = null;
                 videoElement.classList.add('hidden');
-                placeholder.classList.remove('hidden');
+                placeholder.classList.add('hidden'); // Garde propre
 
                 btn.innerHTML = `<i class="fa-solid fa-video"></i> <span>Activer Caméra</span>`;
                 btn.classList.replace('bg-red-600', 'bg-indigo-600');
@@ -223,8 +281,50 @@
                 modeText.classList.replace('text-emerald-400', 'text-amber-400');
 
                 streamActive = false;
+                stopEmotionAnalysis();
                 showToast('Caméra désactivée');
             }
+        }
+
+        // Simulation dynamique de l'analyse des micro-expressions en direct
+        function startEmotionAnalysis() {
+            const dominantEl = document.getElementById('emotion-dominant');
+            
+            emotionInterval = setInterval(() => {
+                if (!streamActive) return;
+
+                // Génération de valeurs aléatoires fluides pour simuler l'analyse faciale
+                const conc = Math.floor(Math.random() * 25) + 70; // Entre 70% et 95%
+                const tens = Math.floor(Math.random() * 30) + 10; // Entre 10% et 40%
+                const joy = Math.floor(Math.random() * 40) + 30; // Entre 30% et 70%
+                const surp = Math.floor(Math.random() * 20) + 5; // Entre 5% et 25%
+
+                document.getElementById('val-concentration').textContent = conc + '%';
+                document.getElementById('bar-concentration').style.width = conc + '%';
+
+                document.getElementById('val-tension').textContent = tens + '%';
+                document.getElementById('bar-tension').style.width = tens + '%';
+
+                document.getElementById('val-joy').textContent = joy + '%';
+                document.getElementById('bar-joy').style.width = joy + '%';
+
+                document.getElementById('val-surprise').textContent = surp + '%';
+                document.getElementById('bar-surprise').style.width = surp + '%';
+
+                dominantEl.textContent = conc > 85 ? "État : Focalisation intense" : "État : Analyse stable";
+                dominantEl.className = "text-xs px-2.5 py-1 bg-indigo-500/20 text-indigo-300 rounded-lg border border-indigo-500/30 font-medium";
+            }, 2000);
+        }
+
+        function stopEmotionAnalysis() {
+            if (emotionInterval) clearInterval(emotionInterval);
+            document.getElementById('emotion-dominant').textContent = "En attente du flux";
+            document.getElementById('emotion-dominant').className = "text-xs px-2.5 py-1 bg-slate-800 text-slate-400 rounded-lg border border-slate-700";
+            
+            ['concentration', 'tension', 'joy', 'surprise'].forEach(id => {
+                document.getElementById('val-' + id).textContent = '0%';
+                document.getElementById('bar-' + id).style.width = '0%';
+            });
         }
 
         function clearLogs() {
@@ -248,7 +348,7 @@
             container.prepend(newLog);
         }
 
-        // Initialisation Chart.js sécurisée
+        // Initialisation Chart.js
         window.addEventListener('DOMContentLoaded', () => {
             const canvasEl = document.getElementById('attentionChart');
             if (canvasEl) {
