@@ -7,6 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Filtre Mode Nuit / Infrarouge (Vision Nocturne) */
+        .night-vision {
+            filter: sepia(100%) hue-rotate(60deg) saturate(500%) contrast(1.2);
+        }
+    </style>
 </head>
 <body class="h-full bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
 
@@ -51,14 +57,17 @@
                         <span id="cam-status-dot" class="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
                         <h2 class="font-semibold text-sm text-slate-200">Flux Optique EgoLens</h2>
                     </div>
-                    <div class="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
-                        État : <span id="cam-mode-text" class="text-amber-400 font-medium">Caméra désactivée</span>
+                    <div class="flex items-center space-x-2">
+                        <span id="night-mode-badge" class="hidden text-xs bg-emerald-950 text-emerald-400 px-2.5 py-0.5 rounded-md border border-emerald-800 font-mono">IR / NUIT ACTIF</span>
+                        <div class="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
+                            État : <span id="cam-mode-text" class="text-amber-400 font-medium">Caméra désactivée</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Vue de la lentille -->
                 <div class="relative w-full h-64 md:h-80 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
-                    <video id="webcam" autoplay playsinline class="absolute inset-0 w-full h-full object-cover hidden"></video>
+                    <video id="webcam" autoplay playsinline class="absolute inset-0 w-full h-full object-cover hidden transition-all duration-300"></video>
 
                     <div class="absolute inset-0 opacity-40 bg-[radial-gradient(#4f46e5_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
                     
@@ -86,9 +95,9 @@
                         <i class="fa-solid fa-video"></i>
                         <span>Activer Caméra</span>
                     </button>
-                    <button onclick="showToast('Filtre de clarté activé')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs py-2.5 px-3 rounded-xl transition font-medium flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
-                        <span>Clarté+</span>
+                    <button onclick="toggleNightVision()" id="btn-night-vision" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs py-2.5 px-3 rounded-xl transition font-medium flex items-center justify-center space-x-2 opacity-55 cursor-not-allowed" disabled>
+                        <i class="fa-solid fa-moon text-emerald-400"></i>
+                        <span>Mode Nuit</span>
                     </button>
                     <button onclick="showToast('Isolation du sujet activée')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs py-2.5 px-3 rounded-xl transition font-medium flex items-center justify-center space-x-2">
                         <i class="fa-solid fa-user-shield text-indigo-400"></i>
@@ -101,58 +110,80 @@
                 </div>
             </div>
 
-            <!-- NOUVEAU : Module d'analyse des micro-expressions en direct -->
+            <!-- MODULE : Analyse détaillée des micro-expressions (FACS Étendu) -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold text-sm text-slate-200 flex items-center space-x-2">
-                        <i class="fa-solid fa-face-grin-beam text-indigo-400"></i>
-                        <span>Analyse des Micro-Expressions (FACS)</span>
+                        <i class="fa-solid fa-microchip text-indigo-400"></i>
+                        <span>Analyse Avancée des Micro-Expressions (FACS)</span>
                     </h3>
                     <span id="emotion-dominant" class="text-xs px-2.5 py-1 bg-slate-800 text-slate-400 rounded-lg border border-slate-700">En attente du flux</span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Concentration / Focalisation -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <!-- AU1 + AU2 : Sourcils (Haussement/Froncement) -->
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
                         <div class="flex justify-between text-xs mb-1.5">
-                            <span class="text-slate-400">Concentration</span>
-                            <span id="val-concentration" class="text-indigo-400 font-bold">0%</span>
+                            <span class="text-slate-400 truncate">AU1/2 Sourcils</span>
+                            <span id="val-au-brows" class="text-indigo-400 font-bold">0%</span>
                         </div>
                         <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                            <div id="bar-concentration" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+                            <div id="bar-au-brows" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
                         </div>
                     </div>
 
-                    <!-- Tension / Stress -->
+                    <!-- AU4 : Froncement de sourcils (Concentration/Colère) -->
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
                         <div class="flex justify-between text-xs mb-1.5">
-                            <span class="text-slate-400">Tension / Vigilance</span>
-                            <span id="val-tension" class="text-amber-400 font-bold">0%</span>
+                            <span class="text-slate-400 truncate">AU4 Froncement</span>
+                            <span id="val-au-frown" class="text-amber-400 font-bold">0%</span>
                         </div>
                         <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                            <div id="bar-tension" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+                            <div id="bar-au-frown" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
                         </div>
                     </div>
 
-                    <!-- Joie / Positivité -->
+                    <!-- AU12 : Coin des lèvres (Sourire Duchenne) -->
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
                         <div class="flex justify-between text-xs mb-1.5">
-                            <span class="text-slate-400">Engagement / Joie</span>
-                            <span id="val-joy" class="text-emerald-400 font-bold">0%</span>
+                            <span class="text-slate-400 truncate">AU12 Sourire</span>
+                            <span id="val-au-smile" class="text-emerald-400 font-bold">0%</span>
                         </div>
                         <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                            <div id="bar-joy" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
+                            <div id="bar-au-smile" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
                         </div>
                     </div>
 
-                    <!-- Surprise / Réactivité -->
+                    <!-- AU17 : Menton / Tension buccale -->
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
                         <div class="flex justify-between text-xs mb-1.5">
-                            <span class="text-slate-400">Réactivité / Surprise</span>
-                            <span id="val-surprise" class="text-cyan-400 font-bold">0%</span>
+                            <span class="text-slate-400 truncate">AU17 Tension Lèvres</span>
+                            <span id="val-au-lips" class="text-cyan-400 font-bold">0%</span>
                         </div>
                         <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                            <div id="bar-surprise" class="bg-cyan-500 h-full w-0 transition-all duration-300"></div>
+                            <div id="bar-au-lips" class="bg-cyan-500 h-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Fréquence de clignement -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-slate-400 truncate">Clignement (Bpm)</span>
+                            <span id="val-au-blink" class="text-purple-400 font-bold">0/min</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="bar-au-blink" class="bg-purple-500 h-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Asymétrie faciale -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-slate-400 truncate">Asymétrie Faciale</span>
+                            <span id="val-au-asym" class="text-rose-400 font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="bar-au-asym" class="bg-rose-500 h-full w-0 transition-all duration-300"></div>
                         </div>
                     </div>
                 </div>
@@ -215,6 +246,7 @@
     <!-- Scripts -->
     <script>
         let streamActive = false;
+        let nightVisionActive = false;
         let mediaStream = null;
         let emotionInterval = null;
 
@@ -234,6 +266,7 @@
             const videoElement = document.getElementById('webcam');
             const placeholder = document.getElementById('cam-placeholder');
             const btn = document.getElementById('btn-toggle-cam');
+            const nightBtn = document.getElementById('btn-night-vision');
             const statusDot = document.getElementById('cam-status-dot');
             const modeText = document.getElementById('cam-mode-text');
 
@@ -252,6 +285,9 @@
                     btn.classList.replace('bg-indigo-600', 'bg-red-600');
                     btn.classList.replace('hover:bg-indigo-500', 'hover:bg-red-500');
                     
+                    nightBtn.removeAttribute('disabled');
+                    nightBtn.classList.remove('opacity-55', 'cursor-not-allowed');
+
                     statusDot.classList.replace('bg-amber-500', 'bg-emerald-500');
                     modeText.textContent = "Flux en direct actif";
                     modeText.classList.replace('text-amber-400', 'text-emerald-400');
@@ -270,11 +306,15 @@
                 }
                 videoElement.srcObject = null;
                 videoElement.classList.add('hidden');
-                placeholder.classList.add('hidden'); // Garde propre
+                placeholder.classList.add('hidden');
 
                 btn.innerHTML = `<i class="fa-solid fa-video"></i> <span>Activer Caméra</span>`;
                 btn.classList.replace('bg-red-600', 'bg-indigo-600');
                 btn.classList.replace('hover:bg-red-500', 'hover:bg-indigo-500');
+
+                nightBtn.setAttribute('disabled', 'true');
+                nightBtn.classList.add('opacity-55', 'cursor-not-allowed');
+                if(nightVisionActive) toggleNightVision(); // Désactive le mode nuit si actif
 
                 statusDot.classList.replace('bg-emerald-500', 'bg-amber-500');
                 modeText.textContent = "Caméra désactivée";
@@ -286,32 +326,63 @@
             }
         }
 
-        // Simulation dynamique de l'analyse des micro-expressions en direct
+        function toggleNightVision() {
+            if (!streamActive) return;
+            const videoElement = document.getElementById('webcam');
+            const nightBadge = document.getElementById('night-mode-badge');
+            const nightBtn = document.getElementById('btn-night-vision');
+
+            nightVisionActive = !nightVisionActive;
+            if (nightVisionActive) {
+                videoElement.classList.add('night-vision');
+                nightBadge.classList.remove('hidden');
+                nightBtn.classList.replace('bg-slate-800', 'bg-emerald-600/30');
+                nightBtn.classList.replace('border-slate-700', 'border-emerald-500');
+                showToast('Mode Nuit / Infrarouge activé');
+                addLogCustom('Activation du mode de vision nocturne IR.');
+            } else {
+                videoElement.classList.remove('night-vision');
+                nightBadge.classList.add('hidden');
+                nightBtn.classList.replace('bg-emerald-600/30', 'bg-slate-800');
+                nightBtn.classList.replace('border-emerald-500', 'border-slate-700');
+                showToast('Mode Nuit désactivé');
+                addLogCustom('Désactivation du mode de vision nocturne IR.');
+            }
+        }
+
+        // Simulation dynamique des micro-expressions FACS détaillées
         function startEmotionAnalysis() {
             const dominantEl = document.getElementById('emotion-dominant');
             
             emotionInterval = setInterval(() => {
                 if (!streamActive) return;
 
-                // Génération de valeurs aléatoires fluides pour simuler l'analyse faciale
-                const conc = Math.floor(Math.random() * 25) + 70; // Entre 70% et 95%
-                const tens = Math.floor(Math.random() * 30) + 10; // Entre 10% et 40%
-                const joy = Math.floor(Math.random() * 40) + 30; // Entre 30% et 70%
-                const surp = Math.floor(Math.random() * 20) + 5; // Entre 5% et 25%
+                const brows = Math.floor(Math.random() * 40) + 40;
+                const frown = Math.floor(Math.random() * 30) + 10;
+                const smile = Math.floor(Math.random() * 50) + 20;
+                const lips = Math.floor(Math.random() * 25) + 5;
+                const blink = Math.floor(Math.random() * 8) + 12; // 12 à 20 clignements/min
+                const asym = Math.floor(Math.random() * 15) + 2;
 
-                document.getElementById('val-concentration').textContent = conc + '%';
-                document.getElementById('bar-concentration').style.width = conc + '%';
+                document.getElementById('val-au-brows').textContent = brows + '%';
+                document.getElementById('bar-au-brows').style.width = brows + '%';
 
-                document.getElementById('val-tension').textContent = tens + '%';
-                document.getElementById('bar-tension').style.width = tens + '%';
+                document.getElementById('val-au-frown').textContent = frown + '%';
+                document.getElementById('bar-au-frown').style.width = frown + '%';
 
-                document.getElementById('val-joy').textContent = joy + '%';
-                document.getElementById('bar-joy').style.width = joy + '%';
+                document.getElementById('val-au-smile').textContent = smile + '%';
+                document.getElementById('bar-au-smile').style.width = smile + '%';
 
-                document.getElementById('val-surprise').textContent = surp + '%';
-                document.getElementById('bar-surprise').style.width = surp + '%';
+                document.getElementById('val-au-lips').textContent = lips + '%';
+                document.getElementById('bar-au-lips').style.width = lips + '%';
 
-                dominantEl.textContent = conc > 85 ? "État : Focalisation intense" : "État : Analyse stable";
+                document.getElementById('val-au-blink').textContent = blink + '/min';
+                document.getElementById('bar-au-blink').style.width = (blink * 4) + '%';
+
+                document.getElementById('val-au-asym').textContent = asym + '%';
+                document.getElementById('bar-au-asym').style.width = (asym * 4) + '%';
+
+                dominantEl.textContent = smile > 55 ? "État : Engagement positif" : (frown > 30 ? "État : Concentration accrue" : "État : Neutre stable");
                 dominantEl.className = "text-xs px-2.5 py-1 bg-indigo-500/20 text-indigo-300 rounded-lg border border-indigo-500/30 font-medium";
             }, 2000);
         }
@@ -321,8 +392,8 @@
             document.getElementById('emotion-dominant').textContent = "En attente du flux";
             document.getElementById('emotion-dominant').className = "text-xs px-2.5 py-1 bg-slate-800 text-slate-400 rounded-lg border border-slate-700";
             
-            ['concentration', 'tension', 'joy', 'surprise'].forEach(id => {
-                document.getElementById('val-' + id).textContent = '0%';
+            ['au-brows', 'au-frown', 'au-smile', 'au-lips', 'au-blink', 'au-asym'].forEach(id => {
+                document.getElementById('val-' + id).textContent = id === 'au-blink' ? '0/min' : '0%';
                 document.getElementById('bar-' + id).style.width = '0%';
             });
         }
